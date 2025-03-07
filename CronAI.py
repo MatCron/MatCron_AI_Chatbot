@@ -13,7 +13,6 @@ completion = client.chat.completions.create(
   store=True,
   messages=[
     
-    {"role": "user", "content": "What is your name?"},
   ]
 )
 
