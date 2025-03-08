@@ -26,8 +26,8 @@ jobs:
       run: |
         docker buildx build \
           --platform=linux/arm64 \
-          -t your-dockerhub-username/your-image-name:arm \
-          -f Service.Dockerfile \
+          -t lee112/cronai:arm \
+          -f Service/Dockerfile \
           --push .
 
     - name: Build and Push AMD Docker Image
@@ -35,6 +35,6 @@ jobs:
       run: |
         docker buildx build \
           --platform=linux/amd64 \
-          -t your-dockerhub-username/your-image-name:amd \
-          -f Service.Dockerfile \
+          -t lee112/cronai:amd \
+          -f Service/Dockerfile \
           --push .
