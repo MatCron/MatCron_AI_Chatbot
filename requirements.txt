@@ -1,4 +1,10 @@
+# requirements.txt
 fastapi
-uvicorn
+uvicorn[standard]
+aiomysql
+pymysql
+python-dotenv
+sqlalchemy
+pydantic
 openai
-dotenv
+PyJWT

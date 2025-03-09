@@ -1,87 +1,62 @@
-from fastapi import FastAPI, Request, HTTPException, WebSocket, Depends
-import CronAI
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, Request
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
+from Service.baseFunction import validate_request
+from Service.database import get_db
+from Service.schemas import UserOut
+from Service.crud import get_user_by_id, get_users
+import Service.cronAI as cronAI
 import uvicorn
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, Boolean
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-import uuid
-import os
-from dotenv import load_dotenv
-import jwt
-print("Main File running")
-# Load environment variables
-load_dotenv()
-JWT_SECRET = os.getenv("JWT_SECRET")
-JWT_ISSUER = os.getenv("JWT_ISSUER")
-DATABASE_URL = os.getenv("DATABASE")
 
-# FastAPI app instance
 app = FastAPI()
 
-# Database connection
-engine = create_async_engine(DATABASE_URL, echo=True)
-SessionLocal = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-Base = declarative_base()
+@app.get("/users/{user_id}", response_model=UserOut)
+async def get_user_endpoint(user_id: str, db: AsyncSession = Depends(get_db)):
+    print("User ID:", user_id)
+    user = await get_user_by_id(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
-# Database Model
-class User(Base):
-    __tablename__ = "Users"
-    Id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    OrgId = Column(String(36), ForeignKey("Organisations.Id"), nullable=False)
-    GroupId = Column(String(36), ForeignKey("Groups.Id"), nullable=True)
-    FirstName = Column(String(50), nullable=False)
-    LastName = Column(String(50), nullable=False)
-    Password = Column(Text, nullable=False)
-    Email = Column(String(100), nullable=True, unique=True)
-    EmailVerified = Column(Boolean, nullable=False, default=False)
-    UserType = Column(Integer, nullable=True)
-    ProfilePicture = Column(Text, nullable=True)
-    Token = Column(Text, nullable=True)
-
-# Dependency for DB session
-async def get_db():
-    async with SessionLocal() as db:
-        yield db
-
-# Token validation function
-def validate_request(auth_header: str):
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid token in Authorization header")
-    token = auth_header.split("Bearer ")[1]
-    if not token:
-        raise HTTPException(status_code=401, detail="Missing or invalid token with Bearer")
+@app.get("/users")
+async def get_users_endpoint(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
     try:
-        decoded_token = jwt.decode(
-            token,
-            JWT_SECRET,
-            algorithms=["HS256"],
-            issuer=JWT_ISSUER,
-            audience=JWT_ISSUER
-        )
-        return {"message": "Token is valid", "decoded": decoded_token}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError as ex:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(ex)}")
+        users = await get_users(db, skip, limit)
+        print("Users:", users)
+        return users
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
 
-# Routes
 @app.get("/server-connection")
 async def connection():
     return {"message": "Connected"}
-
-@app.post("/validate_token")
-async def validate_token(request: Request):
+  
+@app.get("/test-token")
+async def test_token(request : Request,db: AsyncSession = Depends(get_db)):
     auth_header = request.headers.get("Authorization")
-    return {"message": validate_request(auth_header)}
-
+    result = validate_request(auth_header)
+    users = await get_user_by_id(db, result["decoded"]["Id"])
+    if users is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return users
+  
 @app.websocket("/ws/chatbot")
-async def chatbot(websocket: WebSocket):
+async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
     try:
         auth_header = websocket.headers.get("Authorization")
         result = validate_request(auth_header)
         if not result:
             await websocket.send_text("Invalid token")
             return
+        
+        users = await get_user_by_id(db, result["decoded"]["Id"])
+        if users is None:
+            raise Exception(status_code=404, detail="User not found")
+        if users.Email != result["decoded"]["Email"]:
+            raise Exception(status_code=401, detail="Invalid token Email")
+        if users.OrgId != result["decoded"]["OrgId"]:
+            raise Exception(status_code=401, detail="Token Error Org")
+        
     except Exception as ex:
         await websocket.send_text(str(ex))
         return
@@ -92,13 +67,21 @@ async def chatbot(websocket: WebSocket):
             data = await websocket.receive_text()
             if data == "exit":
                 break
-            response = CronAI.chatBot(data, result["decoded"]["Email"])
+            response = cronAI.chatBot(data, result["decoded"]["Email"])
             await websocket.send_text(response)
     except Exception as ex:
         await websocket.send_text(str(ex))
     finally:
         await websocket.close()
 
-# Run the application
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
