@@ -10,7 +10,7 @@ def chatBot(message:str, account):
   )
 
   completion = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="ft:gpt-4o-mini-2024-07-18:matcron:matcron-model:B8Xhh4sa",
     store=True,
     messages=[
       {"role": "user", "content": message}
