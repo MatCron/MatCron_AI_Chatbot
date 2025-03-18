@@ -1,0 +1,18 @@
+services:
+  cronai-app:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    networks:
+      - fastapi_network
+    restart: unless-stopped
+    # Add these to ensure fresh image pulls
+    pull_policy: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+networks:
+  fastapi_network:
+    driver: bridge

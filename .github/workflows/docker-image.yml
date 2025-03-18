@@ -22,19 +22,19 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and Push ARM Docker Image
-      working-directory: Backend/
+      working-directory: .
       run: |
         docker buildx build \
           --platform=linux/arm64 \
           -t lee112/cronai:arm \
-          -f Service/Dockerfile \
+          -f Dockerfile \
           --push .
 
     - name: Build and Push AMD Docker Image
-      working-directory: Backend/
+      working-directory: .
       run: |
         docker buildx build \
           --platform=linux/amd64 \
           -t lee112/cronai:amd \
-          -f Service/Dockerfile \
+          -f Dockerfile \
           --push .
