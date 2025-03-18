@@ -47,6 +47,7 @@ async def test_token(request : Request,db: AsyncSession = Depends(get_db)):
 @app.websocket("/ws/chatbot")
 async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
     try:
+        await websocket.accept()
         auth_header = websocket.headers.get("Authorization")
         result = validate_request(auth_header)
         print(f"Token validation result: {result}")
@@ -66,7 +67,7 @@ async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
         await websocket.send_text(str(ex))
         return
     
-    await websocket.accept()
+    
     try:
         while True:
             data = await websocket.receive_text()
