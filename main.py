@@ -7,6 +7,8 @@ from Service.schemas import UserOut
 from Service.crud import get_user_by_id, get_users
 import Service.cronAI as cronAI
 import uvicorn
+import json
+from datetime import datetime
 
 app = FastAPI()
 
@@ -35,16 +37,19 @@ async def connection():
 async def test_token(request : Request,db: AsyncSession = Depends(get_db)):
     auth_header = request.headers.get("Authorization")
     result = validate_request(auth_header)
+    print(f"Token validation result: {result}")
     users = await get_user_by_id(db, result["decoded"]["Id"])
+    print(f"User lookup result: {users}") 
     if users is None:
         raise HTTPException(status_code=404, detail="User not found")
     return users
-  
+
 @app.websocket("/ws/chatbot")
 async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
     try:
         auth_header = websocket.headers.get("Authorization")
         result = validate_request(auth_header)
+        print(f"Token validation result: {result}")
         if not result:
             await websocket.send_text("Invalid token")
             return
@@ -68,7 +73,9 @@ async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
             if data == "exit":
                 break
             response = cronAI.chatBot(data, result["decoded"]["Email"])
-            await websocket.send_text(response)
+            await websocket.send_text(json.dumps({"message":response,
+            "status": "success",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
     except Exception as ex:
         await websocket.send_text(str(ex))
     finally:

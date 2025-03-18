@@ -1,7 +1,8 @@
 import asyncio
 import websockets
+import json
 
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODk3OTQ1Zi03N2IyLTRiMjQtOGYxYS0xNzlhNjhhMGE3ZjAiLCJJZCI6Ijc4OTc5NDVmLTc3YjItNGIyNC04ZjFhLTE3OWE2OGEwYTdmMCIsIkVtYWlsIjoiam9obmRvZUBleGFtcGxlLmNvbSIsIk9yZ0lkIjoiM2UxNzYxODItYmVjYS0xMWVmLWEyNWYtMDI0MmFjMTgwMDAyIiwiZXhwIjoxNzQyMDU3Njk5LCJpc3MiOiJNYXRjcm9uLm9ubGluZSIsImF1ZCI6Ik1hdGNyb24ub25saW5lIn0.72Bvs40bC5eZNdQ6eomnnVZ1GtP9TJju9J8GEwzHW5E"  # Replace with a valid JWT token
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODk3OTQ1Zi03N2IyLTRiMjQtOGYxYS0xNzlhNjhhMGE3ZjAiLCJJZCI6Ijc4OTc5NDVmLTc3YjItNGIyNC04ZjFhLTE3OWE2OGEwYTdmMCIsIkVtYWlsIjoiam9obmRvZUBleGFtcGxlLmNvbSIsIlVzZXJUeXBlIjoiMSIsIk9yZ0lkIjoiM2UxNzYxODItYmVjYS0xMWVmLWEyNWYtMDI0MmFjMTgwMDAyIiwiT3JnVHlwZSI6IlVua25vd24iLCJleHAiOjE3NDI2OTg0ODgsImlzcyI6Ik1hdGNyb24ub25saW5lIiwiYXVkIjoiTWF0Y3Jvbi5vbmxpbmUifQ.TPOaaNwwe8-pMS4b6msBINda0XeAA9hLskjWmCKRCOk"  # Replace with a valid JWT token
 WS_URL = "ws://localhost:8000/ws/chatbot"
 
 async def websocket_client():
@@ -18,7 +19,8 @@ async def websocket_client():
 
             await websocket.send(message)
             response = await websocket.recv()
-            print(f"Bot: {response}")
+            message = json.loads(response)["message"]
+            print(f"Bot: {message}")
 
         await websocket.close()
 
