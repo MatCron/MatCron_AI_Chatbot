@@ -10,7 +10,14 @@ async def websocket_client():
 
     async with websockets.connect(WS_URL, extra_headers=headers) as websocket:
         print("Connected to the chatbot WebSocket")
-
+        
+        response = await websocket.recv()
+        response = json.loads(response)
+        if response["status"] == "failed":
+                print(f"Bot: {response['message']}")
+                return
+        else :
+            print(f"Bot: {response['message']}")
         while True:
             message = input("You: ")
             if message.lower() == "exit":
@@ -26,3 +33,4 @@ async def websocket_client():
 
 if __name__ == "__main__":
     asyncio.run(websocket_client())
+

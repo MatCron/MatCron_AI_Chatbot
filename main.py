@@ -46,30 +46,49 @@ async def test_token(request : Request,db: AsyncSession = Depends(get_db)):
 
 @app.websocket("/ws/chatbot")
 async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
+  
+    await websocket.accept()
+    error = False
     try:
-        await websocket.accept()
         auth_header = websocket.headers.get("Authorization")
         result = validate_request(auth_header)
         print(f"Token validation result: {result}")
         if not result:
             await websocket.send_text("Invalid token")
-            return
+            error = True
         
         users = await get_user_by_id(db, result["decoded"]["Id"])
         if users is None:
-            raise Exception(status_code=404, detail="User not found")
+            error = True
+            await websocket.send_text(json.dumps({"message":"User not found",
+            "status": "failed",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
         if users.Email != result["decoded"]["Email"]:
-            raise Exception(status_code=401, detail="Invalid token Email")
+            error = True
+            await websocket.send_text(json.dumps({"message":"Token Error Email",
+            "status": "failed",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
         if users.OrgId != result["decoded"]["OrgId"]:
-            raise Exception(status_code=401, detail="Token Error Org")
+            error = True
+            await websocket.send_text(json.dumps({"message":"Token Error OrgId",
+            "status": "failed",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
         
+        if not error:
+          await websocket.send_text(json.dumps({"message":"Thank you for using Matcron! How can I help you?",
+          "status": "success",
+          "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
+      
     except Exception as ex:
-        await websocket.send_text(str(ex))
-        return
+        await websocket.send_text(json.dumps({"message":str(ex),
+        "status": "failed", 
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
+        error = True
+    
     
     
     try:
-        while True:
+        while not error:
             data = await websocket.receive_text()
             if data == "exit":
                 break
@@ -78,7 +97,10 @@ async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
             "status": "success",
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
     except Exception as ex:
-        await websocket.send_text(str(ex))
+        await websocket.send_text(json.dumps({"message":str(ex),
+        "status": "failed",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }))
     finally:
         await websocket.close()
 
