@@ -92,7 +92,11 @@ async def chatbot(websocket: WebSocket,db: AsyncSession = Depends(get_db)):
             data = await websocket.receive_text()
             if data == "exit":
                 break
-            response = cronAI.chatBot(data, result["decoded"]["Email"])
+            data = json.loads(data)
+            print("Data:", data)
+            
+            response = cronAI.chatBot(data["message"], result["decoded"]["Email"])
+            
             await websocket.send_text(json.dumps({"message":response,
             "status": "success",
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
