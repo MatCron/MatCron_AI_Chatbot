@@ -95,6 +95,7 @@ To deploy on a cloud server:
 
 ## Frontend implementation for phase 1 and 2
 Sample screen after the implemetation
+
 ![Flutter Implemetation](https://i.ibb.co/B2CN1w06/image.png)
 
 
