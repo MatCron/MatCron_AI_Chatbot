@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODk3OTQ1Zi03N2IyLTRiMjQtOGYxYS0xNzlhNjhhMGE3ZjAiLCJJZCI6Ijc4OTc5NDVmLTc3YjItNGIyNC04ZjFhLTE3OWE2OGEwYTdmMCIsIkVtYWlsIjoiam9obmRvZUBleGFtcGxlLmNvbSIsIlVzZXJUeXBlIjoiMSIsIk9yZ0lkIjoiM2UxNzYxODItYmVjYS0xMWVmLWEyNWYtMDI0MmFjMTgwMDAyIiwiT3JnVHlwZSI6IlVua25vd24iLCJleHAiOjE3NDI2OTg0ODgsImlzcyI6Ik1hdGNyb24ub25saW5lIiwiYXVkIjoiTWF0Y3Jvbi5vbmxpbmUifQ.TPOaaNwwe8-pMS4b6msBINda0XeAA9hLskjWmCKRCOk"  # Replace with a valid JWT token
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODk3OTQ1Zi03N2IyLTRiMjQtOGYxYS0xNzlhNjhhMGE3ZjAiLCJJZCI6Ijc4OTc5NDVmLTc3YjItNGIyNC04ZjFhLTE3OWE2OGEwYTdmMCIsIkVtYWlsIjoiam9obmRvZUBleGFtcGxlLmNvbSIsIlVzZXJUeXBlIjoiMSIsIk9yZ0lkIjoiM2UxNzYxODItYmVjYS0xMWVmLWEyNWYtMDI0MmFjMTgwMDAyIiwiT3JnVHlwZSI6IjAiLCJleHAiOjE3NDQwMjk5NjEsImlzcyI6Ik1hdGNyb24ub25saW5lIiwiYXVkIjoiTWF0Y3Jvbi5vbmxpbmUifQ.mIlIT9b8PqX3Ib5GoXtrufw0mzs3vC9loe9BpzPTRT0"
 WS_URL = "ws://localhost:8000/ws/chatbot"
 
 async def websocket_client():
@@ -23,8 +23,8 @@ async def websocket_client():
             if message.lower() == "exit":
                 print("Closing connection...")
                 break
-
-            await websocket.send(message)
+            jsonMessage = json.dumps({"message": message})
+            await websocket.send(jsonMessage)
             response = await websocket.recv()
             message = json.loads(response)["message"]
             print(f"Bot: {message}")
