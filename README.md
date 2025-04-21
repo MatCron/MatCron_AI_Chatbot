@@ -6,13 +6,13 @@ This AI chatbot is built using FastAPI and OpenAI's API. The chatbot leverages a
 ## Planning Phases
 The initial planning, there are a total of 3 phases which included:
 
-### Phase 1
+### Phase 1 - Completed 
 Completed the chatbot with colleced data and fine tuned it.
 
-### Phase 2
+### Phase 2 - Completed
 Completed the text-to-speech and speech-to-text implementation.
 
-### Phase 3
+### Phase 3 - Future Feature
 Unfinished Chatbot AI automation which help user in completing the request automatically based on the user provided information. Hence, this is not completed as due to time constraint. It will be added to the future features.
 
 ## Features
