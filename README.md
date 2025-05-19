@@ -98,7 +98,3 @@ Sample screen after the implemetation
 
 ![Flutter Implemetation](https://i.ibb.co/B2CN1w06/image.png)
 
-
-## License
-This project is licensed under the MIT License.
-
